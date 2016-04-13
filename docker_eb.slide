@@ -1,0 +1,183 @@
+The Zen of Docker & EB
+How I learned to stop worrying and love deploying new code
+14 Apr 2016
+Tags: docker, elastic beanstalk, eb
+
+Adam Wonak
+Senior Software Engineer, Food Genius
+adam@getfoodgenius.com
+https://github.com/awonak/
+@adamwonak
+
+* Here's the problem
+
+We need to deploy new apps / new environments for existing apps.
+
+- We had a few simple web services written in go and python that need to be deployed to production servers.
+- For most apps, we used vagrant + salt to provision local virtual machines & EC2 instances.
+- Creating new server environments required a lot of manual steps.
+
+
+* Too much manual work introduced room for human error and unexpected behavior.
+
+What is the solution?
+
+* Enter Docker & Elastic Beanstalk
+
+Lets get this party started.
+.image assets/docker.png
+.image assets/eb.png
+
+* How should we do it?
+
+The problem was broken up into 2 sections:
+
+- Application environment configuration (what is running)
+- Server environment configuration (where is it running)
+
+* Docker: Application Environment
+
+Using Docker, we were able to design a consistent application environment that is guaranteed to run the same on a development machine as it would in production.
+
+The application environment can define things like required system packages, environment variables and what port to communicate on.
+
+* Sample Dockerfile
+
+
+    FROM golang:1.5.2
+
+    # Copy the app source
+    RUN mkdir -p /go/src/github.com/foodgenius/restribution
+    WORKDIR /go/src/github.com/foodgenius/restribution
+    ADD . /go/src/github.com/foodgenius/restribution
+
+    # Install the application
+    RUN go install
+
+    # restribution runs on port 8080 so exposed that
+    EXPOSE 8080
+    CMD ["restribution", "http"]
+
+* Build and Run the container locally
+
+Build it
+
+    $ docker build -f Dockerfile.local -t $(NAME) --rm .
+
+Run it
+
+    $ docker run -it \
+        --env-file $(ENV_FILE) \
+        --publish=8080:8080 \
+        --name $(NAME)-dev \
+        --rm $(NAME)
+
+
+* Elastic Beanstalk: Server Environment
+
+Using Elastic Beanstalk, we are able to define a server configuration to run our Docker container.
+
+The server environment can define things like auto scaling rules, load balancing and nginx configurations for communicating with the app.
+
+
+* Sample Elastic Beanstalk configuration
+
+    $ eb create restribution-env \
+        --cname=restribution-env \
+        --instance_type=m1.small \
+        --instance_profile=restribution \
+        --tags=Application=restribution,Service=eb \
+        --envvars=FSEL_HOST=fsel.us-east-1.elasticbeanstalk.com,\
+    DATASET_BUCKET=deploy-foodgenius,\
+    DATASET_TABLE=datasets,\
+    TRAINED_CLASSIFIER_TABLE=trained_classifiers
+
+We can save our active environment config
+
+    $ eb config save restribution-config
+
+And have new envs created from that config
+
+    $ eb create restribution-test-feature --cname=restribution-test-feature --cfg=restribution-config
+
+* What have we done so far?
+
+Application Environment
+
+- Wrote a Dockerfile to encapsulate the application and its environment in a Docker container
+
+Server Environment
+
+- Created an environment on Elastic Beanstalk for our application
+- Saved our environment configuration for reuse later
+
+* Now what?
+
+* Get Smart About Deploying Code
+
+- Use semantic versioning to tag every release that gets deployed
+- Build tag and publish the Docker image to ECR for each tagged version
+- Deploy a specific tagged version to a specific Elastic Beanstalk environment
+
+* Prepare the release
+
+Once we've got everything merged into master and we're ready to deploy, we want to tag the repo with our current version:
+
+    git tag v1.0.1
+
+Then we want to build, tag and push the docker image:
+
+    # Build, Tag and Push the Docker image
+    docker build -f Dockerfile.local -t $(NAME) --rm .
+    docker tag $(NAME) $(REGISTRY)/$(NAME):v1.0.1
+    docker push $(REGISTRY)/$(NAME):v1.0.1
+
+* Now we're ready to deploy
+
+This is all accomplished with a simple wrapper shell script
+
+    $ deploy.sh v1.0.1 restribution-env
+
+* What is it doing?
+
+Build the source bundle
+
+    # Create new Elastic Beanstalk version
+    SOURCE_BUNDLE="${EB_ENV}-${VERSION}.zip"
+
+    DOCKERRUN_FILE=Dockerrun.aws.json
+    sed "s/<TAG>/$VERSION/" < Dockerrun.aws.json.template > $DOCKERRUN_FILE
+
+    zip -r $SOURCE_BUNDLE .ebextensions/ $DOCKERRUN_FILE
+
+* What is it doing?
+
+Put the source bundle on S3 and create a new EB app version
+
+    aws s3 cp $SOURCE_BUNDLE s3://$EB_BUCKET/$APP_NAME/$SOURCE_BUNDLE
+
+    aws elasticbeanstalk create-application-version \
+        --application-name $APP_NAME \
+        --version-label $VERSION \
+        --source-bundle S3Bucket=$EB_BUCKET,S3Key=$APP_NAME/$SOURCE_BUNDLE \
+        --region $AWS_REGION
+
+* What is it doing?
+
+Update the specified version with the uploaded app version bundle
+
+    # Update Elastic Beanstalk environment to new version
+    aws elasticbeanstalk update-environment \
+        --environment-name $EB_ENV \
+        --version-label $VERSION \
+        --region $AWS_REGION
+
+* The deploy has been kicked off
+
+At this point, the deployment has been kicked off and the new version will start accepting traffic as soon as the server environment is green.
+
+You can log into the Elastic Beanstalk console and watch the progress of the deployment.
+
+* Results
+
+We are now able to reliably run the application locally, in a dev environment or in a production environment with a simple command. Furthermore, we are able to experiment with new versions by creating new feature branch eb envs with ease.
