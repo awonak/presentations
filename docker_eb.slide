@@ -2,6 +2,12 @@ The Zen of Docker & EB
 How I learned to stop worrying and love deploying new code
 14 Apr 2016
 Tags: docker, elastic beanstalk, eb
+# NOTES
+# prereqs - install docker, install eb
+# show full list of steps up front
+# create sample project, show demos
+# live demo
+# thank you - links to demo & tools
 
 Adam Wonak
 Senior Software Engineer, Food Genius
@@ -25,15 +31,14 @@ What is the solution?
 * Enter Docker & Elastic Beanstalk
 
 Lets get this party started.
-.image assets/docker.png
-.image assets/eb.png
+.image assets/docker_eb.png
 
 * How should we do it?
 
 The problem was broken up into 2 sections:
 
-- Application environment configuration (what is running)
-- Server environment configuration (where is it running)
+- Application environment configuration (_what_is_running_)
+- Server environment configuration (_where_its_running_)
 
 * Docker: Application Environment
 
