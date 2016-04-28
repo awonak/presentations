@@ -1,14 +1,7 @@
-The Zen of Docker & EB
-How I learned to stop worrying and love deploying new code
+Go, Docker & Elastic Beanstalk
+How Food Genius deploys go webservices using Docker & EB
 14 Apr 2016
-Tags: docker, elastic beanstalk, eb
-# NOTES
-# WHY we would choose this stack
-# prereqs - install docker, install eb
-# show full list of steps up front
-# create sample project, show demos
-# live demo
-# thank you - links to demo & tools
+Tags: go, docker, elastic beanstalk, eb
 
 Adam Wonak
 Senior Software Engineer, Food Genius
@@ -33,13 +26,7 @@ What is the solution?
 Lets get this party started.
 .image assets/docker_eb.png
 
-* What will we be doing?
-
-- Define Application Environment (_what_is_running_)
-- Create a Server Environment (_where_its_running_)
-- Define The Versioning and Deployment Process (_which_version_is_running_)
-
-* Prereqs
+* Prereqs & tools we will be using
 
 .link https://golang.org/doc/install Go 1.6
 .link https://github.com/tools/godep godeps
@@ -47,8 +34,15 @@ Lets get this party started.
 .link http://docs.aws.amazon.com/cli/latest/userguide/installing.html aws cli
 .link http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html aws eb cli
 
+* What will we be doing?
 
-* Application Environment
+- Define Application Environment (_what_is_running_)
+- Create a Server Environment (_where_its_running_)
+- Define the Versioning and Deployment Process (_which_version_is_running_)
+
+* Define Application Environment
+
+* Application code & Docker
 
 Using Docker, we were able to design a consistent application environment that is guaranteed to run the same on a development machine as it would in production.
 
@@ -67,13 +61,10 @@ Use `godep` to vendor our dependencies inside of our project
 Application structure
 
     .
-    ├── Dockerfile
+    ├── example.go
     ├── Godeps
     │   ├── Godeps.json
     │   └── Readme
-    ├── Makefile
-    ├── example.go
-    ├── local.env
     └── vendor
         ├── github.com
         .   ├── gin-gonic
@@ -108,15 +99,19 @@ Run it
 
     $ docker run -it --publish=8080:8080 --name example-dev --rm example
 
+* Create a Server Environment
 
-* Elastic Beanstalk: Server Environment
+* Elastic Beanstalk
 
-Using Elastic Beanstalk, we are able to define a server configuration to run our Docker container.
+Using Elastic Beanstalk, we are able to define a server environment configuration to run our Docker container.
 
 The server environment can define things like auto scaling rules, load balancing and nginx configurations for communicating with the app.
 
 
 * Sample Elastic Beanstalk configuration
+
+    # Initialize your project and follow the prompts
+    $ eb init
 
     $ eb create example-env \
         --cname=chicagolang-example \
@@ -137,18 +132,19 @@ And have new envs created from that config
 
 Application Environment
 
+- Wrote a simple Go app and vendored the dependencies using godep.
 - Wrote a Dockerfile to encapsulate the application and its environment in a Docker container
 
 Server Environment
 
-- Created an environment on Elastic Beanstalk for our application
+- Created an environment on Elastic Beanstalk to run our application
 - Saved our environment configuration for reuse later
 
-* Now what?
+* Define the Versioning and Deployment Process
 
 * Get Smart About Deploying Code
 
-- Use semantic versioning to tag every release that gets deployed
+- Use semantic versioning to tag every code release that gets deployed
 - Build tag and publish the Docker image to ECR for each tagged version
 - Deploy a specific tagged version to a specific Elastic Beanstalk environment
 
@@ -160,26 +156,30 @@ Once we've got everything merged into master and we're ready to deploy, we want 
 
 Then we want to build, tag and push the docker image:
 
+    # Create a repository on Amazon ECR
+    $ aws ecr create-repository --repository-name example
+
     # Build, Tag and Push the Docker image
-    docker build -f Dockerfile.local -t $(NAME) --rm .
-    docker tag $(NAME) $(REGISTRY)/$(NAME):v1.0.1
-    docker push $(REGISTRY)/$(NAME):v1.0.1
+    docker build -t example --rm .
+    docker tag example <aws_account_id>.dkr.ecr.us-west-2.amazonaws.com/example:v1.0.1
+    docker push <aws_account_id>.dkr.ecr.us-west-2.amazonaws.com/example:v1.0.1
 
 * Now we're ready to deploy
 
 This is all accomplished with a simple wrapper shell script
 
-    $ deploy.sh v1.0.1 restribution-env
+    $ deploy.sh v1.0.1 example-env
 
 * What is it doing?
 
 Build the source bundle
 
-    # Create new Elastic Beanstalk version
+    # Create new Elastic Beanstalk application version zip
     SOURCE_BUNDLE="${EB_ENV}-${VERSION}.zip"
 
     DOCKERRUN_FILE=Dockerrun.aws.json
-    sed "s/<TAG>/$VERSION/" < Dockerrun.aws.json.template > $DOCKERRUN_FILE
+    IMAGE_NAME=$REGISTRY_HOST\\/$APP_NAME\:$VERSION
+    sed "s/<IMAGE_NAME>/$IMAGE_NAME/" < Dockerrun.aws.json.template > $DOCKERRUN_FILE
 
     zip -r $SOURCE_BUNDLE .ebextensions/ $DOCKERRUN_FILE
 
@@ -187,12 +187,12 @@ Build the source bundle
 
 Put the source bundle on S3 and create a new EB app version
 
-    aws s3 cp $SOURCE_BUNDLE s3://$EB_BUCKET/$APP_NAME/$SOURCE_BUNDLE
+    aws s3 cp $SOURCE_BUNDLE s3://$S3_BUCKET/$APP_NAME/$SOURCE_BUNDLE
 
     aws elasticbeanstalk create-application-version \
         --application-name $APP_NAME \
         --version-label $VERSION \
-        --source-bundle S3Bucket=$EB_BUCKET,S3Key=$APP_NAME/$SOURCE_BUNDLE \
+        --source-bundle S3Bucket=$S3_BUCKET,S3Key=$APP_NAME/$SOURCE_BUNDLE \
         --region $AWS_REGION
 
 * What is it doing?
@@ -210,6 +210,23 @@ Update the specified version with the uploaded app version bundle
 At this point, the deployment has been kicked off and the new version will start accepting traffic as soon as the server environment is green.
 
 You can log into the Elastic Beanstalk console and watch the progress of the deployment.
+
+* Review Final Application structure
+
+    .
+    ├── Dockerfile
+    ├── Dockerrun.aws.json.template
+    ├── Godeps
+    │   ├── Godeps.json
+    │   └── Readme
+    ├── Makefile
+    ├── deploy.sh
+    ├── example.go
+    ├── local.env
+    └── vendor
+        ├── github.com
+        .   ├── gin-gonic
+        .   .   └── gin
 
 * Results
 
