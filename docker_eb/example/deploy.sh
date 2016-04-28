@@ -16,7 +16,7 @@ function usage () {
 
 # validate that REGISTRY_HOST is set
 # ex. <aws_account_id>.dkr.ecr.us-west-2.amazonaws.com
-if [ ! -f $(REGISTRY_HOST) ]; then
+if [ -z "$REGISTRY_HOST" ]; then
     usage "env var for REGISTRY_HOST must be set.";
 fi
 

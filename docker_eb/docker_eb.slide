@@ -9,11 +9,11 @@ adam@getfoodgenius.com
 https://github.com/awonak/
 @adamwonak
 
-* Here's our problem
+* Here's our problem:
 
-We need to deploy new apps / new environments for existing apps.
+We needed to deploy new apps/new environments for existing apps.
 
-- We had a few simple web services written in Go and Python that need to be deployed to production servers.
+- We had a few simple web services written in Go and Python that needed to be deployed to production servers.
 - For most apps, we used Vagrant + Salt to provision local virtual machines & EC2 instances.
 - Creating new server environments required a lot of manual steps.
 
@@ -25,7 +25,7 @@ What is the solution?
 
 .image assets/docker_eb.png
 
-* Prereqs & tools we will be using
+* Prereqs & tools we will be using:
 
 .link https://golang.org/doc/install Go 1.6
 .link https://github.com/tools/godep godeps
@@ -43,7 +43,7 @@ What is the solution?
 
 * Docker
 
-Using Docker, we were able to design a consistent application environment that is guaranteed to run the same on a development machine as it would in production.
+Using Docker, we are able to design a consistent application environment that is guaranteed to run the same on a development machine as it would in production.
 
 The application environment can define things like required system packages, environment variables and what port to communicate on.
 
@@ -153,12 +153,12 @@ Once we've got everything merged into master and we're ready to deploy, we want 
 
     git tag v1.0.1
 
-Then we want to build, tag and push the docker image:
+Then we want to build, tag and push the Docker image:
 
     # Create a repository on Amazon ECR
     $ aws ecr create-repository --repository-name example
 
-    # Build, Tag and Push the Docker image
+    # Build, tag and push the Docker image
     docker build -t example --rm .
     docker tag example <aws_account_id>.dkr.ecr.us-west-2.amazonaws.com/example:v1.0.1
     docker push <aws_account_id>.dkr.ecr.us-west-2.amazonaws.com/example:v1.0.1
@@ -167,7 +167,7 @@ Then we want to build, tag and push the docker image:
 
 This is all accomplished with a simple wrapper shell script
 
-    $ deploy.sh v1.0.1 example-env
+    $ ./deploy.sh v1.0.1 example-env
 
 * What is it doing?
 
@@ -229,7 +229,7 @@ You can log into the Elastic Beanstalk console and watch the progress of the dep
 
 * Results
 
-We are now able to reliably run the application locally, in a dev environment or in a production environment with a simple command. Furthermore, we are able to experiment with new versions by creating new feature branch eb envs with ease.
+We are now able to reliably run the application locally, in a dev environment or in a production environment, with a simple command. Furthermore, we are able to experiment with new versions by creating new feature branch eb envs with ease.
 
 With a few commands, we can tag, publish and deploy a new version to production.
 
