@@ -1,5 +1,5 @@
 Go, Docker & Elastic Beanstalk
-How Food Genius deploys go webservices using Docker & EB
+How Food Genius deploys Go webservices using Docker & EB
 14 Apr 2016
 Tags: go, docker, elastic beanstalk, eb
 
@@ -9,7 +9,7 @@ adam@getfoodgenius.com
 https://github.com/awonak/
 @adamwonak
 
-* Here's the problem
+* Here's our problem
 
 We need to deploy new apps / new environments for existing apps.
 
@@ -23,7 +23,6 @@ What is the solution?
 
 * Enter Docker & Elastic Beanstalk
 
-Lets get this party started.
 .image assets/docker_eb.png
 
 * Prereqs & tools we will be using
@@ -42,13 +41,13 @@ Lets get this party started.
 
 * Define Application Environment
 
-* Application code & Docker
+* Docker
 
 Using Docker, we were able to design a consistent application environment that is guaranteed to run the same on a development machine as it would in production.
 
 The application environment can define things like required system packages, environment variables and what port to communicate on.
 
-* Application code
+* Sample application code
 
 .code example/example.go
 
@@ -89,7 +88,7 @@ Application structure
     CMD ["example"]
 
 
-* Build and Run the container locally
+* Build and run the container locally
 
 Build it
 
@@ -142,7 +141,7 @@ Server Environment
 
 * Define the Versioning and Deployment Process
 
-* Get Smart About Deploying Code
+* Get smart about deploying code
 
 - Use semantic versioning to tag every code release that gets deployed
 - Build tag and publish the Docker image to ECR for each tagged version
@@ -211,7 +210,7 @@ At this point, the deployment has been kicked off and the new version will start
 
 You can log into the Elastic Beanstalk console and watch the progress of the deployment.
 
-* Review Final Application structure
+* Review final application structure
 
     .
     ├── Dockerfile
@@ -231,3 +230,9 @@ You can log into the Elastic Beanstalk console and watch the progress of the dep
 * Results
 
 We are now able to reliably run the application locally, in a dev environment or in a production environment with a simple command. Furthermore, we are able to experiment with new versions by creating new feature branch eb envs with ease.
+
+With a few commands, we can tag, publish and deploy a new version to production.
+
+    $ git tag v1.0.1
+    $ make publish
+    $ deploy v1.0.1 example-env
