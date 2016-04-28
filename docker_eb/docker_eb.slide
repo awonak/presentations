@@ -1,5 +1,5 @@
 Go, Docker & Elastic Beanstalk
-How Food Genius deploys Go webservices using Docker & EB
+How Food Genius deploys Go web services using Docker & EB
 14 Apr 2016
 Tags: go, docker, elastic beanstalk, eb
 
@@ -13,8 +13,8 @@ https://github.com/awonak/
 
 We need to deploy new apps / new environments for existing apps.
 
-- We had a few simple web services written in go and python that need to be deployed to production servers.
-- For most apps, we used vagrant + salt to provision local virtual machines & EC2 instances.
+- We had a few simple web services written in Go and Python that need to be deployed to production servers.
+- For most apps, we used Vagrant + Salt to provision local virtual machines & EC2 instances.
 - Creating new server environments required a lot of manual steps.
 
 * Too much manual work introduced room for human error and unexpected behavior.
@@ -36,7 +36,7 @@ What is the solution?
 * What will we be doing?
 
 - Define Application Environment (_what_is_running_)
-- Create a Server Environment (_where_its_running_)
+- Create a Server Environment (_where_it's_running_)
 - Define the Versioning and Deployment Process (_which_version_is_running_)
 
 * Define Application Environment
@@ -51,7 +51,7 @@ The application environment can define things like required system packages, env
 
 .code example/example.go
 
-* Vendorize the application
+* Vendorize the application's dependencies
 
 Use `godep` to vendor our dependencies inside of our project
 
@@ -131,7 +131,7 @@ And have new envs created from that config
 
 Application Environment
 
-- Wrote a simple Go app and vendored the dependencies using godep.
+- Wrote a simple Go app and vendored the dependencies using godep
 - Wrote a Dockerfile to encapsulate the application and its environment in a Docker container
 
 Server Environment
@@ -144,7 +144,7 @@ Server Environment
 * Get smart about deploying code
 
 - Use semantic versioning to tag every code release that gets deployed
-- Build tag and publish the Docker image to ECR for each tagged version
+- Build, tag and publish the Docker image to ECR for each tagged version
 - Deploy a specific tagged version to a specific Elastic Beanstalk environment
 
 * Prepare the release

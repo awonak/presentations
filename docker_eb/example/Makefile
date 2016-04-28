@@ -1,7 +1,7 @@
 # the name of the application
 NAME=example
 # aws ecr host e.g. <aws_account_id>.dkr.ecr.us-west-2.amazonaws.com
-REGISTRY=${REGISTRY_HOST}/repository
+REGISTRY=${REGISTRY_HOST}
 # the application's semantic version e.g. v1.0.1
 VERSION=$(shell git describe --tags)
 # env vars specific to your local app environment
