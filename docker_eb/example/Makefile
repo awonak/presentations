@@ -42,5 +42,7 @@ publish: ecrlogin
 create:
 	eb create example-env \
 		--cname=chicagolang-example \
+		--instance_type=t2.nano \
+		--instance_profile=examplerole \
 		--tags=Application=example,Service=eb \
 		--envvars=GIN_MODE=release
