@@ -40,7 +40,7 @@ publish: ecrlogin build check-registry check-bucket
 
 	# Create an Application Version in Elastic Beanstalk
 	$(eval SOURCE_BUNDLE := $(VERSION).zip )
-	$(shell sed "s/<TAG>/$(VERSION)/" < Dockerrun.aws.json.template > $(DOCKERRUN_FILE))
+	$(shell sed "s/<IMAGE_NAME>/$(REGISTRY)\/$(NAME):$(VERSION)/" < Dockerrun.aws.json.template > $(DOCKERRUN_FILE))
 	zip -r $(SOURCE_BUNDLE) .ebextensions/ $(DOCKERRUN_FILE)
 
 	aws s3 cp $(SOURCE_BUNDLE) s3://$(BUCKET)/$(NAME)/$(SOURCE_BUNDLE)
