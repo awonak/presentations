@@ -1,5 +1,5 @@
 Go, Docker & Elastic Beanstalk
-How Food Genius deploys go webservices using Docker & EB
+How Food Genius deploys Go web services using Docker & EB
 14 Apr 2016
 Tags: go, docker, elastic beanstalk, eb
 
@@ -9,12 +9,12 @@ adam@getfoodgenius.com
 https://github.com/awonak/
 @adamwonak
 
-* Here's the problem
+* Here's our problem:
 
-We need to deploy new apps / new environments for existing apps.
+We needed to deploy new apps/new environments for existing apps.
 
-- We had a few simple web services written in go and python that need to be deployed to production servers.
-- For most apps, we used vagrant + salt to provision local virtual machines & EC2 instances.
+- We had a few simple web services written in Go and Python that needed to be deployed to production servers.
+- For most apps, we used Vagrant + Salt to provision local virtual machines & EC2 instances.
 - Creating new server environments required a lot of manual steps.
 
 * Too much manual work introduced room for human error and unexpected behavior.
@@ -23,10 +23,9 @@ What is the solution?
 
 * Enter Docker & Elastic Beanstalk
 
-Lets get this party started.
 .image assets/docker_eb.png
 
-* Prereqs & tools we will be using
+* Prereqs & tools we will be using:
 
 .link https://golang.org/doc/install Go 1.6
 .link https://github.com/tools/godep godeps
@@ -37,22 +36,22 @@ Lets get this party started.
 * What will we be doing?
 
 - Define Application Environment (_what_is_running_)
-- Create a Server Environment (_where_its_running_)
+- Create a Server Environment (_where_it's_running_)
 - Define the Versioning and Deployment Process (_which_version_is_running_)
 
 * Define Application Environment
 
-* Application code & Docker
+* Docker
 
-Using Docker, we were able to design a consistent application environment that is guaranteed to run the same on a development machine as it would in production.
+Using Docker, we are able to design a consistent application environment that is guaranteed to run the same on a development machine as it would in production.
 
 The application environment can define things like required system packages, environment variables and what port to communicate on.
 
-* Application code
+* Sample application code
 
 .code example/example.go
 
-* Vendorize the application
+* Vendorize the application's dependencies
 
 Use `godep` to vendor our dependencies inside of our project
 
@@ -89,7 +88,7 @@ Application structure
     CMD ["example"]
 
 
-* Build and Run the container locally
+* Build and run the container locally
 
 Build it
 
@@ -132,7 +131,7 @@ And have new envs created from that config
 
 Application Environment
 
-- Wrote a simple Go app and vendored the dependencies using godep.
+- Wrote a simple Go app and vendored the dependencies using godep
 - Wrote a Dockerfile to encapsulate the application and its environment in a Docker container
 
 Server Environment
@@ -142,10 +141,10 @@ Server Environment
 
 * Define the Versioning and Deployment Process
 
-* Get Smart About Deploying Code
+* Get smart about deploying code
 
 - Use semantic versioning to tag every code release that gets deployed
-- Build tag and publish the Docker image to ECR for each tagged version
+- Build, tag and publish the Docker image to ECR for each tagged version
 - Deploy a specific tagged version to a specific Elastic Beanstalk environment
 
 * Prepare the release
@@ -154,15 +153,12 @@ Once we've got everything merged into master and we're ready to deploy, we want 
 
     git tag v1.0.1
 
-
-* Prepare the release
-
-Then we want to build, tag and push the docker image:
+Then we want to build, tag and push the Docker image:
 
     # Create a repository on Amazon ECR
     $ aws ecr create-repository --repository-name example
 
-    # Build, Tag and Push the Docker image
+    # Build, tag and push the Docker image
     docker build -t example --rm .
     docker tag example <aws_account_id>.dkr.ecr.us-west-2.amazonaws.com/example:v1.0.1
     docker push <aws_account_id>.dkr.ecr.us-west-2.amazonaws.com/example:v1.0.1
@@ -205,7 +201,7 @@ At this point, the deployment has been kicked off and the new version will start
 
 You can log into the Elastic Beanstalk console and watch the progress of the deployment.
 
-* Review Final Application structure
+* Review final application structure
 
     .
     ├── Dockerfile
@@ -224,4 +220,10 @@ You can log into the Elastic Beanstalk console and watch the progress of the dep
 
 * Results
 
-We are now able to reliably run the application locally, in a dev environment or in a production environment with a simple command. Furthermore, we are able to experiment with new versions by creating new feature branch eb envs with ease.
+We are now able to reliably run the application locally, in a dev environment or in a production environment, with a simple command. Furthermore, we are able to experiment with new versions by creating new feature branch eb envs with ease.
+
+With a few commands, we can tag, publish and deploy a new version to production.
+
+    $ git tag v1.0.1
+    $ make publish
+    $ deploy v1.0.1 example-env
