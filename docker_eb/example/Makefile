@@ -1,7 +1,7 @@
 # the name of the application
 NAME=example
 # aws ecr host e.g. <aws_account_id>.dkr.ecr.us-west-2.amazonaws.com
-REGISTRY=${REGISTRY_HOST?"Need to set REGISTRY_HOST"}/repository
+REGISTRY=${REGISTRY_HOST}
 # the application's semantic version e.g. v1.0.1
 VERSION=$(shell git describe --tags)
 # env vars specific to your local app environment
@@ -11,8 +11,7 @@ DOCKERRUN_FILE="Dockerrun.aws.json"
 # specify the target aws region
 AWS_REGION=us-east-1
 # specify your aws s3 bucket to deploy application versions to
-BUCKET=${EB_BUCKET?"Need to set EB_BUCKET"}
-
+BUCKET=${EB_BUCKET}
 
 ## Run the docker build command to create the container and compile the
 ## application inside the container.
@@ -34,7 +33,7 @@ create:
 		--envvars=GIN_MODE=release
 
 ## Build, Tag and Push the feature branch Docker image to the ECR
-publish: ecrlogin build
+publish: ecrlogin build check-registry check-bucket
 	# Tag the docker image and pubish that image to AWS ECR
 	docker tag $(NAME) $(REGISTRY)/$(NAME):$(VERSION)
 	docker push $(REGISTRY)/$(NAME):$(VERSION)
@@ -63,3 +62,13 @@ dockerenv:
 	    echo "Missing docker env file. See README for instructions."; \
 	    exit 1; \
 	fi
+
+check-registry:
+ifndef REGISTRY_HOST
+    $(error REGISTRY_HOST is undefined)
+endif
+
+check-bucket:
+ifndef EB_BUCKET
+    $(error EB_BUCKET is undefined)
+endif

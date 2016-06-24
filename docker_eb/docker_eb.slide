@@ -117,7 +117,6 @@ The server environment can define things like auto scaling rules, load balancing
     $ eb create example-env \
         --cname=chicagolang-example \
         --instance_type=m1.small \
-        --instance_profile=example \
         --tags=Application=example,Service=eb \
         --envvars=GIN_MODE=release
 
