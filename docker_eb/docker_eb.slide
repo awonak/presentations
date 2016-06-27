@@ -109,13 +109,13 @@ The server environment can define things like auto scaling rules, load balancing
 
 * Sample Elastic Beanstalk configuration
 
-    # Initialize your project and follow the prompts
+    # If this is your first time with eb, initialize your project and follow the prompts
     $ eb init
 
+    # Create an application environment for the app
     $ eb create example-env \
         --cname=chicagolang-example \
         --instance_type=m1.small \
-        --instance_profile=examplerole \
         --tags=Application=example,Service=eb \
         --envvars=GIN_MODE=release
 
@@ -163,36 +163,27 @@ Then we want to build, tag and push the Docker image:
     docker tag example <aws_account_id>.dkr.ecr.us-west-2.amazonaws.com/example:v1.0.1
     docker push <aws_account_id>.dkr.ecr.us-west-2.amazonaws.com/example:v1.0.1
 
+_Note:_you'll_need_to_grant_ECR_Read_Access_to_your_EB_IAM_profile_for_deploy_
+
+* Prepare the release
+
+Build the Application Version source bundle, put it on S3 and create a new EB app version:
+
+    zip -r v1.0.1.zip .ebextensions/ Dockerrun.aws.json
+
+    aws s3 cp v1.0.1.zip s3://$S3_BUCKET/example/v1.0.1.zip
+    aws elasticbeanstalk create-application-version \
+        --application-name example \
+        --version-label v1.0.1 \
+        --source-bundle S3Bucket=$S3_BUCKET,S3Key=example/v1.0.1.zip \
+        --region $AWS_REGION
+
+
 * Now we're ready to deploy
 
 This is all accomplished with a simple wrapper shell script
 
-    $ ./deploy.sh v1.0.1 example-env
-
-* What is it doing?
-
-Build the source bundle
-
-    # Create new Elastic Beanstalk application version zip
-    SOURCE_BUNDLE="${EB_ENV}-${VERSION}.zip"
-
-    DOCKERRUN_FILE=Dockerrun.aws.json
-    IMAGE_NAME=$REGISTRY_HOST\\/$APP_NAME\:$VERSION
-    sed "s/<IMAGE_NAME>/$IMAGE_NAME/" < Dockerrun.aws.json.template > $DOCKERRUN_FILE
-
-    zip -r $SOURCE_BUNDLE .ebextensions/ $DOCKERRUN_FILE
-
-* What is it doing?
-
-Put the source bundle on S3 and create a new EB app version
-
-    aws s3 cp $SOURCE_BUNDLE s3://$S3_BUCKET/$APP_NAME/$SOURCE_BUNDLE
-
-    aws elasticbeanstalk create-application-version \
-        --application-name $APP_NAME \
-        --version-label $VERSION \
-        --source-bundle S3Bucket=$S3_BUCKET,S3Key=$APP_NAME/$SOURCE_BUNDLE \
-        --region $AWS_REGION
+    $ deploy.sh v1.0.1 example-env
 
 * What is it doing?
 
