@@ -114,9 +114,7 @@ The server environment can define things like auto scaling rules, load balancing
 
     # Create an application environment for the app
     $ eb create example-env \
-        --cname=chicagolang-example \
         --instance_type=m1.small \
-        --tags=Application=example,Service=eb \
         --envvars=GIN_MODE=release
 
 We can save our active environment config
@@ -167,16 +165,19 @@ _Note:_you'll_need_to_grant_ECR_Read_Access_to_your_EB_IAM_profile_for_deploy_
 
 * Prepare the release
 
-Build the Application Version source bundle, put it on S3 and create a new EB app version:
+Build the Application Version source bundle 
 
+    sed "s/<IMAGE_NAME>/$REGISTRY\/example:v1.0.1/" < Dockerrun.aws.json.tpl > Dockerrun.aws.json
     zip -r v1.0.1.zip .ebextensions/ Dockerrun.aws.json
+
+Put it on S3 and create a new EB app version.
+
 
     aws s3 cp v1.0.1.zip s3://$S3_BUCKET/example/v1.0.1.zip
     aws elasticbeanstalk create-application-version \
         --application-name example \
         --version-label v1.0.1 \
-        --source-bundle S3Bucket=$S3_BUCKET,S3Key=example/v1.0.1.zip \
-        --region $AWS_REGION
+        --source-bundle S3Bucket=$S3_BUCKET,S3Key=example/v1.0.1.zip
 
 
 * Now we're ready to deploy
