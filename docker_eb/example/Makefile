@@ -8,6 +8,8 @@ VERSION=$(shell git describe --tags)
 ENV_FILE=./local.env
 # the output filename for the aws eb Dockerrun file
 DOCKERRUN_FILE="Dockerrun.aws.json"
+# the output filename for the aws eb Dockerrun file
+DOCKERRUN_TPL="Dockerrun.aws.json.template"
 # specify the target aws region
 AWS_REGION=us-east-1
 # specify your aws s3 bucket to deploy application versions to
@@ -26,21 +28,15 @@ run: dockerenv build
 test: build
 	docker run -e "GIN_MODE=test" --name $(NAME)-test --rm $(NAME) go test -v -race ./...
 
-## Create the server environment on Elastic Beanstalk
-create:
-	eb create $(NAME)-env \
-		--tags=Application=$(NAME),Service=eb \
-		--envvars=GIN_MODE=release
-
 ## Build, Tag and Push the feature branch Docker image to the ECR
-publish: ecrlogin build check-registry check-bucket
+publish: ecrlogin build
 	# Tag the docker image and pubish that image to AWS ECR
 	docker tag $(NAME) $(REGISTRY)/$(NAME):$(VERSION)
 	docker push $(REGISTRY)/$(NAME):$(VERSION)
 
 	# Create an Application Version in Elastic Beanstalk
 	$(eval SOURCE_BUNDLE := $(VERSION).zip )
-	$(shell sed "s/<IMAGE_NAME>/$(REGISTRY)\/$(NAME):$(VERSION)/" < Dockerrun.aws.json.template > $(DOCKERRUN_FILE))
+	$(shell sed "s/<IMAGE_NAME>/$(REGISTRY)\/$(NAME):$(VERSION)/" < $(DOCKERRUN_TPL) > $(DOCKERRUN_FILE) )
 	zip -r $(SOURCE_BUNDLE) .ebextensions/ $(DOCKERRUN_FILE)
 
 	aws s3 cp $(SOURCE_BUNDLE) s3://$(BUCKET)/$(NAME)/$(SOURCE_BUNDLE)
@@ -62,13 +58,3 @@ dockerenv:
 	    echo "Missing docker env file. See README for instructions."; \
 	    exit 1; \
 	fi
-
-check-registry:
-ifndef REGISTRY_HOST
-    $(error REGISTRY_HOST is undefined)
-endif
-
-check-bucket:
-ifndef EB_BUCKET
-    $(error EB_BUCKET is undefined)
-endif
