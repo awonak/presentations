@@ -4,8 +4,7 @@ How Food Genius deploys Go web services using Docker & EB
 Tags: go, docker, elastic beanstalk, eb
 
 Adam Wonak
-Senior Software Engineer, Food Genius
-adam@getfoodgenius.com
+adam.wonak@gmail.com
 https://github.com/awonak/
 @adamwonak
 
@@ -27,11 +26,16 @@ What is the solution?
 
 * Prereqs & tools we will be using:
 
+.link https://google.com/?q=git#TODO Git
 .link https://golang.org/doc/install Go 1.6
 .link https://github.com/tools/godep godeps
 .link https://docs.docker.com/engine/tion/ Docker
 .link http://docs.aws.amazon.com/cli/latest/userguide/installing.html aws cli
 .link http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3-install.html aws eb cli
+
+Example code:
+
+.link https://github.com/awonak/presentations/tree/master/docker_eb/example github.com/awonak/presentations/docker_eb/example
 
 * What will we be doing?
 
@@ -145,6 +149,12 @@ Server Environment
 - Build, tag and publish the Docker image to ECR for each tagged version
 - Deploy a specific tagged version to a specific Elastic Beanstalk environment
 
+With a few commands, we can tag, publish and deploy a new version to production.
+
+    $ git tag v1.0.1
+    $ make publish
+    $ deploy.sh v1.0.1 example-env
+
 * Prepare the release
 
 Once we've got everything merged into master and we're ready to deploy, we want to tag the repo with our current version:
@@ -222,9 +232,3 @@ You can log into the Elastic Beanstalk console and watch the progress of the dep
 * Results
 
 We are now able to reliably run the application locally, in a dev environment or in a production environment, with a simple command. Furthermore, we are able to experiment with new versions by creating new feature branch eb envs with ease.
-
-With a few commands, we can tag, publish and deploy a new version to production.
-
-    $ git tag v1.0.1
-    $ make publish
-    $ deploy v1.0.1 example-env
