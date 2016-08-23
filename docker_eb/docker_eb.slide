@@ -26,7 +26,7 @@ What is the solution?
 
 * Prereqs & tools we will be using:
 
-.link https://google.com/?q=git#TODO Git
+.link https://git-scm.com/ Git
 .link https://golang.org/doc/install Go 1.6
 .link https://github.com/tools/godep godeps
 .link https://docs.docker.com/engine/tion/ Docker
