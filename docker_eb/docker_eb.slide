@@ -161,6 +161,8 @@ Once we've got everything merged into master and we're ready to deploy, we want 
 
     git tag v1.0.1
 
+* Prepare the release
+
 Then we want to build, tag and push the Docker image:
 
     # Create a repository on Amazon ECR
@@ -173,7 +175,7 @@ Then we want to build, tag and push the Docker image:
 
 _Note:_you'll_need_to_grant_ECR_Read_Access_to_your_EB_IAM_profile_for_deploy_
 
-* Prepare the release
+* Prepare the release 
 
 Build the Application Version source bundle 
 
